@@ -235,7 +235,14 @@ function generateCartList() {
 }
 //remove from cart
 function removeFromCart(id) {
-  cart = cart.filter((items) => items.id !== id);
+  const item = cart.find((itemCart) => itemCart.id === id);
+  if (item) {
+    item.cantidad--;
+  }
+  if (item.cantidad == 0) {
+    cart = cart.filter((cartItem) => cartItem.id !== id);
+  }
+  console.log(cart);
   document.body.removeChild(document.getElementById("modal-cart"));
   showCart();
   updateCartPreview();
