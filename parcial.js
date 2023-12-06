@@ -90,8 +90,8 @@ let categories = [
   ...new Set(productsList.map((product) => product.categoria)),
   "todos",
 ];
-
-let cart = [];
+//if there is data in localstorage...if not, use empty array for cart
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 //initialize
 init();
@@ -99,6 +99,8 @@ init();
 function init() {
   renderProducts(productsList);
   renderFilters();
+  //we need to update the preview in case there is data in localstorage
+  if (cart.length > 0) updateCartPreview();
 }
 //rendering products
 function renderProducts(productsToRender) {
@@ -307,6 +309,7 @@ function updateCartPreview() {
   );
   document.getElementById("cart-items").textContent = qty;
   document.getElementById("cart-total").textContent = ammount.toFixed(2);
+  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 function showCheckoutModal() {
