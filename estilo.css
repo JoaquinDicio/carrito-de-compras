@@ -278,6 +278,10 @@ main {
 }
 
 /*-------------------------------------------------- Checkout form */
+div.checkout-header{
+  display: flex;
+  justify-content: space-between;
+}
 form.form-checkout{
   padding: 20px;
   display: flex;

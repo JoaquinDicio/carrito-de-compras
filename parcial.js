@@ -171,24 +171,7 @@ function showProductDetails(product, target) {
 }
 //show cart
 function showCart() {
-  //cart modal
-  const modalContainer = document.createElement("div");
-  modalContainer.setAttribute("id", "modal-cart");
-  modalContainer.classList.add("modal-container");
-  const modal = document.createElement("div");
-  modal.classList.add("modal");
-  //modal header
-  const modalHeader = document.createElement("div");
-  modalHeader.classList.add("modal-header");
-  const h3 = document.createElement("h3");
-  h3.textContent = "Carrito de Compras";
-  const span = document.createElement("span");
-  span.textContent = "X";
-  span.classList.add("close-btn");
-  span.addEventListener("click", () => closeModal());
-  modalHeader.appendChild(h3);
-  modalHeader.appendChild(span);
-  modal.appendChild(modalHeader);
+  const { modalContainer, modal } = generateNewModal("Carrito", "modal-cart");
   //Cart list
   const cartList = generateCartList();
   //Cart total
@@ -204,7 +187,6 @@ function showCart() {
   checkoutBtn.setAttribute("type", "submit");
   checkoutBtn.textContent = "Finalizar Compra";
   checkoutBtn.addEventListener("click", () => showCheckoutModal());
-
   //appends everything to modal
   modal.appendChild(cartList);
   modal.appendChild(total);
@@ -311,7 +293,7 @@ function updateCartPreview() {
   document.getElementById("cart-total").textContent = ammount.toFixed(2);
   localStorage.setItem("cart", JSON.stringify(cart));
 }
-
+//displays checkout modal
 function showCheckoutModal() {
   closeModal();
   //generating new modal
@@ -321,33 +303,34 @@ function showCheckoutModal() {
   const modal = document.createElement("div");
   modal.classList.add("modal");
   //modal header
+  const checkoutHeader = document.createElement("div");
+  checkoutHeader.classList.add("checkout-header");
   const h3 = document.createElement("h3");
   h3.innerText = "Checkout";
-  modal.appendChild(h3);
-  modalContainer.appendChild(modal);
+  checkoutHeader.appendChild(h3);
+  //close btn
+  const span = document.createElement("span");
+  span.textContent = "X";
+  span.classList.add("close-btn");
+  span.addEventListener("click", () => closeModal());
+  checkoutHeader.appendChild(span);
+  modal.appendChild(checkoutHeader);
   //modal form
   modal.appendChild(generateCheckoutForm());
 
+  modalContainer.appendChild(modal);
   document.body.appendChild(modalContainer);
 }
-
+//generate form for checkout-modal
 function generateCheckoutForm() {
   const checkoutForm = document.createElement("form");
   checkoutForm.classList.add("form-checkout");
   //username
-  const usernameInput = document.createElement("input");
-  usernameInput.placeholder = "Nombre";
-  checkoutForm.appendChild(usernameInput);
+  checkoutForm.appendChild(createInput("Nombre", "text"));
   //tel
-  const telInput = document.createElement("input");
-  telInput.placeholder = "11 1234 - 5678";
-  telInput.type = "tel";
-  checkoutForm.appendChild(telInput);
+  checkoutForm.appendChild(createInput("11 1234 - 5678", "tel"));
   //email
-  const emailInput = document.createElement("input");
-  emailInput.placeholder = "example@gmail.com";
-  emailInput.type = "email";
-  checkoutForm.appendChild(emailInput);
+  checkoutForm.appendChild(createInput("alguien@gmail.com", "email"));
   //requesting card info
   const h5Card = document.createElement("h5");
   h5Card.textContent = "Datos de la tarjeta";
@@ -369,38 +352,25 @@ function generateCheckoutForm() {
   creditBtn.addEventListener("click", (e) => togglePaymentMethod(e));
   checkoutForm.appendChild(paymentMethodContainer);
   //card number
-  const cardNumber = document.createElement("input");
-  cardNumber.placeholder = "1234 5678 9123 4567";
-  checkoutForm.appendChild(cardNumber);
+  checkoutForm.appendChild(createInput("1234 5678 9123 4567", "text"));
   //card cvv
-  const cardCvv = document.createElement("input");
-  cardCvv.placeholder = "CVV";
-  cardCvv.classList.add("d-inline-block");
-  checkoutForm.appendChild(cardCvv);
+  checkoutForm.appendChild(createInput("CVV", "number", "d-inline-block"));
   //card exp
-  const cardExp = document.createElement("input");
-  cardExp.placeholder = "MM/AA";
-  cardExp.classList.add("d-inline-block");
-  checkoutForm.appendChild(cardExp);
-  cardExp.id = "card-expiration";
+  checkoutForm.appendChild(
+    createInput("MM/AA", "text", "d-inline-block", "card-expiration")
+  );
   //delivery info
   const h5Delivery = document.createElement("h5");
   h5Delivery.textContent = "Datos de envio";
   checkoutForm.appendChild(h5Delivery);
   //delivery adress
-  const adress = document.createElement("input");
-  adress.placeholder = "Direccion falsa 123";
-  checkoutForm.appendChild(adress);
+  checkoutForm.appendChild(createInput("Direccion 1234", "text"));
   //ZIP code
-  const zip = document.createElement("input");
-  zip.placeholder = "Codigo postal";
-  zip.classList.add("d-inline-block");
-  checkoutForm.appendChild(zip);
+  checkoutForm.appendChild(
+    createInput("Codigo Postal", "text", "d-inline-block")
+  );
   // doorbell
-  const bell = document.createElement("input");
-  bell.placeholder = "Timbre";
-  bell.classList.add("d-inline-block");
-  checkoutForm.appendChild(bell);
+  checkoutForm.appendChild(createInput("Timbre", "text", "d-inline-block"));
   //submit btn
   const submit = document.createElement("button");
   submit.classList.add("checkout-btn");
@@ -430,6 +400,16 @@ function togglePaymentMethod(e) {
   buttons.forEach((button) => button.classList.toggle("method-selected"));
 }
 
+function createInput(placeholder, type, classname, id) {
+  const input = document.createElement("input");
+  input.placeholder = placeholder;
+  input.type = type;
+  if (classname) input.classList.add(classname);
+  if (id) input.id = id;
+
+  return input;
+}
+
 function isCreditCard(cardType) {
   if (cardType === "Credito") {
     //select in case is credit card
@@ -452,4 +432,28 @@ function isCreditCard(cardType) {
   } else {
     document.getElementById("select-credit").remove();
   }
+}
+
+function generateNewModal(title, id) {
+  //new modal
+  const modalContainer = document.createElement("div");
+  if (id) modalContainer.setAttribute("id", id);
+  modalContainer.classList.add("modal-container");
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
+  //modal header
+  const modalHeader = document.createElement("div");
+  modalHeader.classList.add("modal-header");
+  const h3 = document.createElement("h3");
+  h3.textContent = title;
+  //close btn
+  const span = document.createElement("span");
+  span.textContent = "X";
+  span.classList.add("close-btn");
+  span.addEventListener("click", () => closeModal());
+  modalHeader.appendChild(h3);
+  modalHeader.appendChild(span);
+  modal.appendChild(modalHeader);
+
+  return { modalContainer, modal };
 }
