@@ -340,6 +340,21 @@ label{
   color: white;
   border: none;
 }
+/*-------------------------------------------------- Final stage */
+h5.thanks-message{
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  margin-top: 80px;
+}
+a.btn-download{
+  border-radius: 5px;
+  background-color: #5caebf;
+  color: white;
+  padding: 10px;
+  width: fit-content;
+  text-decoration: none;
+  margin-top: 10px;
+}
 
 /*-------------------------------------------------- Footer */
 footer {

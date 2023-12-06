@@ -135,24 +135,7 @@ function renderProducts(productsToRender) {
 //show product details
 function showProductDetails(product, target) {
   if (target.tagName !== "BUTTON") {
-    const modalContainer = document.createElement("div");
-    modalContainer.classList.add("modal-container");
-    const modal = document.createElement("div");
-    modal.classList.add("modal");
-    //modal header
-    const modalHeader = document.createElement("div");
-    modalHeader.classList.add("modal-header");
-    //modal header title
-    const h3 = document.createElement("h3");
-    h3.textContent = product.nombre;
-    modalHeader.appendChild(h3);
-    //modal header close btn
-    const span = document.createElement("span");
-    span.innerText = "X";
-    span.classList.add("close-btn");
-    span.addEventListener("click", () => closeModal());
-    modalHeader.appendChild(span);
-    modal.appendChild(modalHeader);
+    const { modalContainer, modal } = generateNewModal(product.nombre);
     //modal image
     const img = document.createElement("img");
     img.setAttribute("src", product.imagen);
@@ -297,27 +280,9 @@ function updateCartPreview() {
 function showCheckoutModal() {
   closeModal();
   //generating new modal
-  const modalContainer = document.createElement("div");
-  modalContainer.setAttribute("id", "modal-cart");
-  modalContainer.classList.add("modal-container");
-  const modal = document.createElement("div");
-  modal.classList.add("modal");
-  //modal header
-  const checkoutHeader = document.createElement("div");
-  checkoutHeader.classList.add("checkout-header");
-  const h3 = document.createElement("h3");
-  h3.innerText = "Checkout";
-  checkoutHeader.appendChild(h3);
-  //close btn
-  const span = document.createElement("span");
-  span.textContent = "X";
-  span.classList.add("close-btn");
-  span.addEventListener("click", () => closeModal());
-  checkoutHeader.appendChild(span);
-  modal.appendChild(checkoutHeader);
+  const { modalContainer, modal } = generateNewModal("Checkout");
   //modal form
   modal.appendChild(generateCheckoutForm());
-
   modalContainer.appendChild(modal);
   document.body.appendChild(modalContainer);
 }
@@ -326,11 +291,15 @@ function generateCheckoutForm() {
   const checkoutForm = document.createElement("form");
   checkoutForm.classList.add("form-checkout");
   //username
-  checkoutForm.appendChild(createInput("Nombre", "text"));
+  checkoutForm.appendChild(createInput("Nombre", "text", null, "name", true));
   //tel
-  checkoutForm.appendChild(createInput("11 1234 - 5678", "tel"));
+  checkoutForm.appendChild(
+    createInput("11 1234 - 5678", "tel", null, "tel", true)
+  );
   //email
-  checkoutForm.appendChild(createInput("alguien@gmail.com", "email"));
+  checkoutForm.appendChild(
+    createInput("alguien@gmail.com", "email", null, "email", true)
+  );
   //requesting card info
   const h5Card = document.createElement("h5");
   h5Card.textContent = "Datos de la tarjeta";
@@ -352,33 +321,73 @@ function generateCheckoutForm() {
   creditBtn.addEventListener("click", (e) => togglePaymentMethod(e));
   checkoutForm.appendChild(paymentMethodContainer);
   //card number
-  checkoutForm.appendChild(createInput("1234 5678 9123 4567", "text"));
+  checkoutForm.appendChild(
+    createInput("1234 5678 9123 4567", "text", null, "card-number", true)
+  );
   //card cvv
-  checkoutForm.appendChild(createInput("CVV", "number", "d-inline-block"));
+  checkoutForm.appendChild(
+    createInput("CVV", "number", "d-inline-block", "cvv", true)
+  );
   //card exp
   checkoutForm.appendChild(
-    createInput("MM/AA", "text", "d-inline-block", "card-expiration")
+    createInput("MM/AA", "text", "d-inline-block", "card-expiration", true)
   );
   //delivery info
   const h5Delivery = document.createElement("h5");
   h5Delivery.textContent = "Datos de envio";
   checkoutForm.appendChild(h5Delivery);
   //delivery adress
-  checkoutForm.appendChild(createInput("Direccion 1234", "text"));
+  checkoutForm.appendChild(
+    createInput("Direccion 1234", "text", null, "adress", true)
+  );
   //ZIP code
   checkoutForm.appendChild(
-    createInput("Codigo Postal", "text", "d-inline-block")
+    createInput("Codigo Postal", "text", "d-inline-block", "zip", true)
   );
   // doorbell
-  checkoutForm.appendChild(createInput("Timbre", "text", "d-inline-block"));
+  checkoutForm.appendChild(
+    createInput("Timbre", "text", "d-inline-block", "bell", true)
+  );
   //submit btn
   const submit = document.createElement("button");
   submit.classList.add("checkout-btn");
   submit.type = "submit";
   submit.textContent = "Finalizar";
+  submit.addEventListener("click", (e) => showThanksModal(e));
   checkoutForm.appendChild(submit);
 
   return checkoutForm;
+}
+function showThanksModal(e) {
+  e.preventDefault();
+  if (validateForm()) {
+    //restarting cart
+    cart = [];
+    updateCartPreview();
+    //closing previous modal
+    closeModal();
+    //generating new one
+    const { modalContainer, modal } = generateNewModal("Compra finalizada");
+    //thanks title
+    const title = document.createElement("h5");
+    title.classList.add("thanks-message");
+    title.textContent = "Gracias por tu compra!";
+    //thanks message
+    const p = document.createElement("p");
+    p.textContent =
+      "Tu compra ha sido finalizada con exito, podes revisar el progreso del envio a traves del mail que enviamos a tu casilla de correo";
+    //btn download
+    const btnDownload = document.createElement("a");
+    btnDownload.textContent = "Descargar Factura";
+    btnDownload.classList = "btn-download";
+    btnDownload.target = "_blank";
+    btnDownload.href = "./assets/facturaejemplo.pdf";
+    modal.appendChild(title);
+    modal.appendChild(p);
+    modal.appendChild(btnDownload);
+    modalContainer.appendChild(modal);
+    document.body.appendChild(modalContainer);
+  }
 }
 
 //utilities
@@ -392,24 +401,22 @@ function AddParagraph(appendTo, text, classname) {
     appendTo.appendChild(p);
   }
 }
-
 function togglePaymentMethod(e) {
   e.preventDefault();
   isCreditCard(e.target.textContent);
   const buttons = document.querySelectorAll(".payment-method-btn");
   buttons.forEach((button) => button.classList.toggle("method-selected"));
 }
-
-function createInput(placeholder, type, classname, id) {
+function createInput(placeholder, type, classname, id, required) {
   const input = document.createElement("input");
   input.placeholder = placeholder;
   input.type = type;
   if (classname) input.classList.add(classname);
   if (id) input.id = id;
+  input.required = required;
 
   return input;
 }
-
 function isCreditCard(cardType) {
   if (cardType === "Credito") {
     //select in case is credit card
@@ -433,7 +440,6 @@ function isCreditCard(cardType) {
     document.getElementById("select-credit").remove();
   }
 }
-
 function generateNewModal(title, id) {
   //new modal
   const modalContainer = document.createElement("div");
@@ -456,4 +462,37 @@ function generateNewModal(title, id) {
   modal.appendChild(modalHeader);
 
   return { modalContainer, modal };
+}
+function validateForm() {
+  let isValid = true;
+  const name = document.getElementById("name");
+  const email = document.getElementById("email");
+  const tel = document.getElementById("tel");
+  const cardNumber = document.getElementById("card-number");
+  const cardExpiration = document.getElementById("card-expiration");
+  const cvv = document.getElementById("cvv");
+  const adress = document.getElementById("adress");
+  const bell = document.getElementById("bell");
+  const zip = document.getElementById("zip");
+  const inputsArr = [
+    name,
+    email,
+    tel,
+    cardNumber,
+    cardExpiration,
+    cvv,
+    adress,
+    bell,
+    zip,
+  ];
+  inputsArr.forEach((input) => {
+    if (input.value.trim() === "") {
+      isValid = false;
+      input.style.border = "1px solid red";
+    } else {
+      input.style.border = "none";
+    }
+  });
+
+  return isValid;
 }
