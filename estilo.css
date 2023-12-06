@@ -277,6 +277,66 @@ main {
   grid-area: mn;
 }
 
+/*-------------------------------------------------- Checkout form */
+form.form-checkout{
+  padding: 20px;
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.form-checkout h5{
+  margin: 30px 0 10px 0;
+  width: 100%;
+}
+.form-checkout input{
+  width: 100%;
+  min-width: 300px;
+  border-radius: 10px;
+  padding: 15px 10px;
+  display: inline;
+  margin:5px 0;
+  background-color: #ebebeb;
+  border: none;
+  font-weight: bold;
+}
+#select-credit{
+  padding: 13px;
+  width: 50%;
+  border-radius: 10px;
+  display: block;
+  margin-top: 7px;
+  background-color: #ebebeb;
+  border: none;
+}
+.form-checkout button.checkout-btn{
+  background-color: #3b60e4;
+  width: 100%;
+  margin-top: 40px;
+  color: white;
+}
+.form-checkout input.d-inline-block{
+  display: inline-block;
+  flex:1;
+}
+label{
+  margin-right: 20px;
+}
+.payment-method-btn{
+  color: #384e77;
+  background-color: transparent;
+  border: none;
+  margin: 0 5px;
+}
+.payment-method-btn:hover{
+  border: 1px solid #384e77;
+}
+
+.method-selected{
+  background-color: #3b60e4;
+  color: white;
+  border: none;
+}
+
 /*-------------------------------------------------- Footer */
 footer {
   background-color: #fbfbfb;

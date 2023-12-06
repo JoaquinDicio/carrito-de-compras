@@ -148,7 +148,7 @@ function showProductDetails(product, target) {
     const span = document.createElement("span");
     span.innerText = "X";
     span.classList.add("close-btn");
-    span.addEventListener("click", () => closeModal(modalContainer));
+    span.addEventListener("click", () => closeModal());
     modalHeader.appendChild(span);
     modal.appendChild(modalHeader);
     //modal image
@@ -183,7 +183,7 @@ function showCart() {
   const span = document.createElement("span");
   span.textContent = "X";
   span.classList.add("close-btn");
-  span.addEventListener("click", () => closeModal(modalContainer));
+  span.addEventListener("click", () => closeModal());
   modalHeader.appendChild(h3);
   modalHeader.appendChild(span);
   modal.appendChild(modalHeader);
@@ -197,9 +197,16 @@ function showCart() {
   const total = document.createElement("p");
   total.textContent = `TOTAL:  $${ammount.toFixed(2)}`;
   total.setAttribute("id", "cart-total");
+  //checkout btn
+  const checkoutBtn = document.createElement("button");
+  checkoutBtn.setAttribute("type", "submit");
+  checkoutBtn.textContent = "Finalizar Compra";
+  checkoutBtn.addEventListener("click", () => showCheckoutModal());
+
   //appends everything to modal
   modal.appendChild(cartList);
   modal.appendChild(total);
+  if (cart.length > 0) modal.appendChild(checkoutBtn);
   modalContainer.appendChild(modal);
   document.body.appendChild(modalContainer);
 }
@@ -248,8 +255,8 @@ function removeFromCart(id) {
   updateCartPreview();
 }
 //close active modal
-function closeModal(activeModal) {
-  document.body.removeChild(activeModal);
+function closeModal() {
+  document.body.removeChild(document.querySelector(".modal-container"));
 }
 //rendering filters
 function renderFilters() {
@@ -301,6 +308,106 @@ function updateCartPreview() {
   document.getElementById("cart-items").textContent = qty;
   document.getElementById("cart-total").textContent = ammount.toFixed(2);
 }
+
+function showCheckoutModal() {
+  closeModal();
+  //generating new modal
+  const modalContainer = document.createElement("div");
+  modalContainer.setAttribute("id", "modal-cart");
+  modalContainer.classList.add("modal-container");
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
+  //modal header
+  const h3 = document.createElement("h3");
+  h3.innerText = "Checkout";
+  modal.appendChild(h3);
+  modalContainer.appendChild(modal);
+  //modal form
+  modal.appendChild(generateCheckoutForm());
+
+  document.body.appendChild(modalContainer);
+}
+
+function generateCheckoutForm() {
+  const checkoutForm = document.createElement("form");
+  checkoutForm.classList.add("form-checkout");
+  //username
+  const usernameInput = document.createElement("input");
+  usernameInput.placeholder = "Nombre";
+  checkoutForm.appendChild(usernameInput);
+  //tel
+  const telInput = document.createElement("input");
+  telInput.placeholder = "11 1234 - 5678";
+  telInput.type = "tel";
+  checkoutForm.appendChild(telInput);
+  //email
+  const emailInput = document.createElement("input");
+  emailInput.placeholder = "example@gmail.com";
+  emailInput.type = "email";
+  checkoutForm.appendChild(emailInput);
+  //requesting card info
+  const h5Card = document.createElement("h5");
+  h5Card.textContent = "Datos de la tarjeta";
+  checkoutForm.appendChild(h5Card);
+  //payment method
+  const paymentMethodContainer = document.createElement("div");
+  paymentMethodContainer.classList.add("payment-methods");
+  // ----- debit
+  const debitBtn = document.createElement("button");
+  debitBtn.textContent = "Debito";
+  debitBtn.className = "payment-method-btn method-selected";
+  paymentMethodContainer.appendChild(debitBtn);
+  debitBtn.addEventListener("click", (e) => togglePaymentMethod(e));
+  // ----- credit
+  const creditBtn = document.createElement("button");
+  creditBtn.textContent = "Credito";
+  creditBtn.className = "payment-method-btn";
+  paymentMethodContainer.appendChild(creditBtn);
+  creditBtn.addEventListener("click", (e) => togglePaymentMethod(e));
+  checkoutForm.appendChild(paymentMethodContainer);
+  //card number
+  const cardNumber = document.createElement("input");
+  cardNumber.placeholder = "1234 5678 9123 4567";
+  checkoutForm.appendChild(cardNumber);
+  //card cvv
+  const cardCvv = document.createElement("input");
+  cardCvv.placeholder = "CVV";
+  cardCvv.classList.add("d-inline-block");
+  checkoutForm.appendChild(cardCvv);
+  //card exp
+  const cardExp = document.createElement("input");
+  cardExp.placeholder = "MM/AA";
+  cardExp.classList.add("d-inline-block");
+  checkoutForm.appendChild(cardExp);
+  cardExp.id = "card-expiration";
+  //delivery info
+  const h5Delivery = document.createElement("h5");
+  h5Delivery.textContent = "Datos de envio";
+  checkoutForm.appendChild(h5Delivery);
+  //delivery adress
+  const adress = document.createElement("input");
+  adress.placeholder = "Direccion falsa 123";
+  checkoutForm.appendChild(adress);
+  //ZIP code
+  const zip = document.createElement("input");
+  zip.placeholder = "Codigo postal";
+  zip.classList.add("d-inline-block");
+  checkoutForm.appendChild(zip);
+  // doorbell
+  const bell = document.createElement("input");
+  bell.placeholder = "Timbre";
+  bell.classList.add("d-inline-block");
+  checkoutForm.appendChild(bell);
+  //submit btn
+  const submit = document.createElement("button");
+  submit.classList.add("checkout-btn");
+  submit.type = "submit";
+  submit.textContent = "Finalizar";
+  checkoutForm.appendChild(submit);
+
+  return checkoutForm;
+}
+
 //utilities
 function AddParagraph(appendTo, text, classname) {
   if (text) {
@@ -310,5 +417,36 @@ function AddParagraph(appendTo, text, classname) {
       p.classList.add(classname);
     }
     appendTo.appendChild(p);
+  }
+}
+
+function togglePaymentMethod(e) {
+  e.preventDefault();
+  isCreditCard(e.target.textContent);
+  const buttons = document.querySelectorAll(".payment-method-btn");
+  buttons.forEach((button) => button.classList.toggle("method-selected"));
+}
+
+function isCreditCard(cardType) {
+  if (cardType === "Credito") {
+    //select in case is credit card
+    const select = document.createElement("select");
+    select.id = "select-credit";
+    const options = [
+      "1 cuota sin interes",
+      "3 cuotas sin interes",
+      "6 cuotas sin interes",
+    ];
+    options.forEach((optionTxt) => {
+      const opt = document.createElement("option");
+      opt.value = optionTxt;
+      opt.text = optionTxt;
+      select.add(opt);
+    });
+    document
+      .getElementById("card-expiration")
+      .insertAdjacentElement("afterend", select);
+  } else {
+    document.getElementById("select-credit").remove();
   }
 }
