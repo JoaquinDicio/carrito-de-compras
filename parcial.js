@@ -90,8 +90,8 @@ let categories = [
   ...new Set(productsList.map((product) => product.categoria)),
   "todos",
 ];
-
-let cart = [];
+//if there is data in localstorage...if not, use empty array for cart
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 //initialize
 init();
@@ -99,6 +99,8 @@ init();
 function init() {
   renderProducts(productsList);
   renderFilters();
+  //we need to update the preview in case there is data in localstorage
+  if (cart.length > 0) updateCartPreview();
 }
 //rendering products
 function renderProducts(productsToRender) {
@@ -133,24 +135,7 @@ function renderProducts(productsToRender) {
 //show product details
 function showProductDetails(product, target) {
   if (target.tagName !== "BUTTON") {
-    const modalContainer = document.createElement("div");
-    modalContainer.classList.add("modal-container");
-    const modal = document.createElement("div");
-    modal.classList.add("modal");
-    //modal header
-    const modalHeader = document.createElement("div");
-    modalHeader.classList.add("modal-header");
-    //modal header title
-    const h3 = document.createElement("h3");
-    h3.textContent = product.nombre;
-    modalHeader.appendChild(h3);
-    //modal header close btn
-    const span = document.createElement("span");
-    span.innerText = "X";
-    span.classList.add("close-btn");
-    span.addEventListener("click", () => closeModal(modalContainer));
-    modalHeader.appendChild(span);
-    modal.appendChild(modalHeader);
+    const { modalContainer, modal } = generateNewModal(product.nombre);
     //modal image
     const img = document.createElement("img");
     img.setAttribute("src", product.imagen);
@@ -169,24 +154,7 @@ function showProductDetails(product, target) {
 }
 //show cart
 function showCart() {
-  //cart modal
-  const modalContainer = document.createElement("div");
-  modalContainer.setAttribute("id", "modal-cart");
-  modalContainer.classList.add("modal-container");
-  const modal = document.createElement("div");
-  modal.classList.add("modal");
-  //modal header
-  const modalHeader = document.createElement("div");
-  modalHeader.classList.add("modal-header");
-  const h3 = document.createElement("h3");
-  h3.textContent = "Carrito de Compras";
-  const span = document.createElement("span");
-  span.textContent = "X";
-  span.classList.add("close-btn");
-  span.addEventListener("click", () => closeModal(modalContainer));
-  modalHeader.appendChild(h3);
-  modalHeader.appendChild(span);
-  modal.appendChild(modalHeader);
+  const { modalContainer, modal } = generateNewModal("Carrito", "modal-cart");
   //Cart list
   const cartList = generateCartList();
   //Cart total
@@ -199,9 +167,9 @@ function showCart() {
   total.setAttribute("id", "cart-total");
   //checkout btn
   const checkoutBtn = document.createElement("button");
-  checkoutBtn.classList.add("btn-checkout");
+  checkoutBtn.setAttribute("type", "submit");
   checkoutBtn.textContent = "Finalizar Compra";
-  checkoutBtn.addEventListener("click", () => generateCheckout());
+  checkoutBtn.addEventListener("click", () => showCheckoutModal());
   //appends everything to modal
   modal.appendChild(cartList);
   modal.appendChild(total);
@@ -253,8 +221,8 @@ function removeFromCart(id) {
   updateCartPreview();
 }
 //close active modal
-function closeModal(activeModal) {
-  document.body.removeChild(activeModal);
+function closeModal() {
+  document.body.removeChild(document.querySelector(".modal-container"));
 }
 //rendering filters
 function renderFilters() {
@@ -306,29 +274,6 @@ function updateCartPreview() {
   document.getElementById("cart-items").textContent = qty;
   document.getElementById("cart-total").textContent = ammount.toFixed(2);
 }
-
-function generateCheckout() {
-  //remove the previous modal
-  closeModal(document.getElementById("modal-cart"));
-  //generate new one
-  const modalContainer = document.createElement("div");
-  modalContainer.setAttribute("id", "modal-checkout");
-  modalContainer.classList.add("modal-container");
-  const modal = document.createElement("div");
-  modal.classList.add("modal");
-
-  //generating form
-  const formCheckout = document.createElement("form");
-  const btnSubmit = document.createElement("button");
-  btnSubmit.setAttribute("type", "submit");
-  btnSubmit.textContent = "Finalizar";
-  formCheckout.appendChild(btnSubmit);
-
-  modal.appendChild(formCheckout);
-  modalContainer.appendChild(modal);
-  document.body.appendChild(modalContainer);
-}
-
 //utilities
 function AddParagraph(appendTo, text, classname) {
   if (text) {
@@ -339,4 +284,99 @@ function AddParagraph(appendTo, text, classname) {
     }
     appendTo.appendChild(p);
   }
+}
+function togglePaymentMethod(e) {
+  e.preventDefault();
+  isCreditCard(e.target.textContent);
+  const buttons = document.querySelectorAll(".payment-method-btn");
+  buttons.forEach((button) => button.classList.toggle("method-selected"));
+}
+function createInput(placeholder, type, classname, id, required) {
+  const input = document.createElement("input");
+  input.placeholder = placeholder;
+  input.type = type;
+  if (classname) input.classList.add(classname);
+  if (id) input.id = id;
+  input.required = required;
+
+  return input;
+}
+function isCreditCard(cardType) {
+  if (cardType === "Credito") {
+    //select in case is credit card
+    const select = document.createElement("select");
+    select.id = "select-credit";
+    const options = [
+      "1 cuota sin interes",
+      "3 cuotas sin interes",
+      "6 cuotas sin interes",
+    ];
+    options.forEach((optionTxt) => {
+      const opt = document.createElement("option");
+      opt.value = optionTxt;
+      opt.text = optionTxt;
+      select.add(opt);
+    });
+    document
+      .getElementById("card-expiration")
+      .insertAdjacentElement("afterend", select);
+  } else {
+    document.getElementById("select-credit").remove();
+  }
+}
+function generateNewModal(title, id) {
+  //new modal
+  const modalContainer = document.createElement("div");
+  if (id) modalContainer.setAttribute("id", id);
+  modalContainer.classList.add("modal-container");
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
+  //modal header
+  const modalHeader = document.createElement("div");
+  modalHeader.classList.add("modal-header");
+  const h3 = document.createElement("h3");
+  h3.textContent = title;
+  //close btn
+  const span = document.createElement("span");
+  span.textContent = "X";
+  span.classList.add("close-btn");
+  span.addEventListener("click", () => closeModal());
+  modalHeader.appendChild(h3);
+  modalHeader.appendChild(span);
+  modal.appendChild(modalHeader);
+
+  return { modalContainer, modal };
+}
+function validateForm() {
+  let isValid = true;
+  const name = document.getElementById("name");
+  const email = document.getElementById("email");
+  const tel = document.getElementById("tel");
+  const cardNumber = document.getElementById("card-number");
+  const cardExpiration = document.getElementById("card-expiration");
+  const cvv = document.getElementById("cvv");
+  const adress = document.getElementById("adress");
+  const bell = document.getElementById("bell");
+  const zip = document.getElementById("zip");
+  const inputsArr = [
+    name,
+    email,
+    tel,
+    cardNumber,
+    cardExpiration,
+    cvv,
+    adress,
+    bell,
+    zip,
+  ];
+  inputsArr.forEach((input) => {
+    if (input.value.trim() === "") {
+      isValid = false;
+      input.style.border = "1px solid red";
+    } else {
+      input.style.border = "none";
+    }
+  });
+
+  return isValid;
 }
