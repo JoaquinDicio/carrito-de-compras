@@ -197,9 +197,15 @@ function showCart() {
   const total = document.createElement("p");
   total.textContent = `TOTAL:  $${ammount.toFixed(2)}`;
   total.setAttribute("id", "cart-total");
+  //checkout btn
+  const checkoutBtn = document.createElement("button");
+  checkoutBtn.classList.add("btn-checkout");
+  checkoutBtn.textContent = "Finalizar Compra";
+  checkoutBtn.addEventListener("click", () => generateCheckout());
   //appends everything to modal
   modal.appendChild(cartList);
   modal.appendChild(total);
+  if (cart.length > 0) modal.appendChild(checkoutBtn);
   modalContainer.appendChild(modal);
   document.body.appendChild(modalContainer);
 }
@@ -242,7 +248,6 @@ function removeFromCart(id) {
   if (item.cantidad == 0) {
     cart = cart.filter((cartItem) => cartItem.id !== id);
   }
-  console.log(cart);
   document.body.removeChild(document.getElementById("modal-cart"));
   showCart();
   updateCartPreview();
@@ -301,6 +306,29 @@ function updateCartPreview() {
   document.getElementById("cart-items").textContent = qty;
   document.getElementById("cart-total").textContent = ammount.toFixed(2);
 }
+
+function generateCheckout() {
+  //remove the previous modal
+  closeModal(document.getElementById("modal-cart"));
+  //generate new one
+  const modalContainer = document.createElement("div");
+  modalContainer.setAttribute("id", "modal-checkout");
+  modalContainer.classList.add("modal-container");
+  const modal = document.createElement("div");
+  modal.classList.add("modal");
+
+  //generating form
+  const formCheckout = document.createElement("form");
+  const btnSubmit = document.createElement("button");
+  btnSubmit.setAttribute("type", "submit");
+  btnSubmit.textContent = "Finalizar";
+  formCheckout.appendChild(btnSubmit);
+
+  modal.appendChild(formCheckout);
+  modalContainer.appendChild(modal);
+  document.body.appendChild(modalContainer);
+}
+
 //utilities
 function AddParagraph(appendTo, text, classname) {
   if (text) {
