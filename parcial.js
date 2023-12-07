@@ -84,6 +84,7 @@ const productsList = [
     categoria: "Electrodomésticos",
   },
 ];
+
 //using set constructor to remove duplicated values from the mapped array
 //this creates a dynamic categories array
 let categories = [
@@ -216,6 +217,7 @@ function removeFromCart(id) {
   if (item.cantidad == 0) {
     cart = cart.filter((cartItem) => cartItem.id !== id);
   }
+  console.log(cart);
   document.body.removeChild(document.getElementById("modal-cart"));
   showCart();
   updateCartPreview();
@@ -264,6 +266,7 @@ function addToCart(id) {
   }
   updateCartPreview();
 }
+
 //update cart-preview data
 function updateCartPreview() {
   const qty = cart.reduce((qty, item) => qty + item.cantidad, 0);
@@ -273,6 +276,121 @@ function updateCartPreview() {
   );
   document.getElementById("cart-items").textContent = qty;
   document.getElementById("cart-total").textContent = ammount.toFixed(2);
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+//displays checkout modal
+function showCheckoutModal() {
+  closeModal();
+  //generating new modal
+  const { modalContainer, modal } = generateNewModal("Checkout");
+  //modal form
+  modal.appendChild(generateCheckoutForm());
+  modalContainer.appendChild(modal);
+  document.body.appendChild(modalContainer);
+}
+//generate form for checkout-modal
+function generateCheckoutForm() {
+  const checkoutForm = document.createElement("form");
+  checkoutForm.classList.add("form-checkout");
+  //username
+  checkoutForm.appendChild(createInput("Nombre", "text", null, "name", true));
+  //tel
+  checkoutForm.appendChild(
+    createInput("11 1234 - 5678", "tel", null, "tel", true)
+  );
+  //email
+  checkoutForm.appendChild(
+    createInput("alguien@gmail.com", "email", null, "email", true)
+  );
+  //requesting card info
+  const h5Card = document.createElement("h5");
+  h5Card.textContent = "Datos de la tarjeta";
+  checkoutForm.appendChild(h5Card);
+  //payment method
+  const paymentMethodContainer = document.createElement("div");
+  paymentMethodContainer.classList.add("payment-methods");
+  // ----- debit
+  const debitBtn = document.createElement("button");
+  debitBtn.textContent = "Debito";
+  debitBtn.className = "payment-method-btn method-selected";
+  paymentMethodContainer.appendChild(debitBtn);
+  debitBtn.addEventListener("click", (e) => togglePaymentMethod(e));
+  // ----- credit
+  const creditBtn = document.createElement("button");
+  creditBtn.textContent = "Credito";
+  creditBtn.className = "payment-method-btn";
+  paymentMethodContainer.appendChild(creditBtn);
+  creditBtn.addEventListener("click", (e) => togglePaymentMethod(e));
+  checkoutForm.appendChild(paymentMethodContainer);
+  //card number
+  checkoutForm.appendChild(
+    createInput("1234 5678 9123 4567", "text", null, "card-number", true)
+  );
+  //card cvv
+  checkoutForm.appendChild(
+    createInput("CVV", "number", "d-inline-block", "cvv", true)
+  );
+  //card exp
+  checkoutForm.appendChild(
+    createInput("MM/AA", "text", "d-inline-block", "card-expiration", true)
+  );
+  //delivery info
+  const h5Delivery = document.createElement("h5");
+  h5Delivery.textContent = "Datos de envio";
+  checkoutForm.appendChild(h5Delivery);
+  //delivery adress
+  checkoutForm.appendChild(
+    createInput("Direccion 1234", "text", null, "adress", true)
+  );
+  //ZIP code
+  checkoutForm.appendChild(
+    createInput("Codigo Postal", "text", "d-inline-block", "zip", true)
+  );
+  // doorbell
+  checkoutForm.appendChild(
+    createInput("Timbre", "text", "d-inline-block", "bell", true)
+  );
+  //submit btn
+  const submit = document.createElement("button");
+  submit.classList.add("checkout-btn");
+  submit.type = "submit";
+  submit.textContent = "Finalizar";
+  submit.addEventListener("click", (e) => showThanksModal(e));
+  checkoutForm.appendChild(submit);
+
+  return checkoutForm;
+}
+function showThanksModal(e) {
+  e.preventDefault();
+  if (validateForm()) {
+    //restarting cart
+    cart = [];
+    updateCartPreview();
+    //closing previous modal
+    closeModal();
+    //generating new one
+    const { modalContainer, modal } = generateNewModal("Compra finalizada");
+    //thanks title
+    const title = document.createElement("h5");
+    title.classList.add("thanks-message");
+    title.textContent = "Gracias por tu compra!";
+    //thanks message
+    const p = document.createElement("p");
+    p.textContent =
+      "Tu compra ha sido finalizada con exito, podes revisar el progreso del envio a traves del mail que enviamos a tu casilla de correo";
+    //btn download
+    const btnDownload = document.createElement("a");
+    btnDownload.textContent = "Descargar Factura";
+    btnDownload.classList = "btn-download";
+    btnDownload.target = "_blank";
+    btnDownload.href = "./assets/facturaejemplo.pdf";
+    modal.appendChild(title);
+    modal.appendChild(p);
+    modal.appendChild(btnDownload);
+    modalContainer.appendChild(modal);
+    document.body.appendChild(modalContainer);
+  }
 }
 //utilities
 function AddParagraph(appendTo, text, classname) {
@@ -349,6 +467,63 @@ function generateNewModal(title, id) {
 }
 function validateForm() {
   let isValid = true;
+  //verifies if any input is empty
+  getInputsFromCheckout().forEach((input) => {
+    if (input.value.trim() === "") {
+      isValid = false;
+      input.style.border = "1px solid red";
+    } else {
+      input.style.border = "none";
+    }
+  });
+  //validate email
+  if (!validateEmail()) {
+    isValid = false;
+    email.style.border = "1px solid red";
+    //in case element is not visible
+    email.scrollIntoView();
+  }
+  if (
+    !validateCardNumbers(
+      document.getElementById("card-number"),
+      document.getElementById("cvv"),
+      document.getElementById("card-expiration")
+    )
+  )
+    isValid = false;
+  return isValid;
+}
+function validateCardNumbers(cardnumber, cvv, exp) {
+  let isValid = true;
+  const cardData = [cardnumber, cvv, exp];
+  //verifying data is type number
+  cardData.forEach((input) => {
+    if (isNaN(input.value)) {
+      isValid = false;
+      markUpError(input);
+    }
+  });
+  //cardnumber lenght
+  if (cardnumber.value.length !== 16) {
+    isValid = false;
+    markUpError(cardnumber);
+  }
+  //code lenght
+  if (cvv.value.length !== 3) {
+    isValid = false;
+    markUpError(cvv);
+  }
+  //expiration format
+  if (exp.value.length !== 4) {
+    isValid = false;
+    markUpError(exp);
+  }
+  return isValid;
+}
+function markUpError(element) {
+  element.style.border = "1px solid red";
+}
+function getInputsFromCheckout() {
   const name = document.getElementById("name");
   const email = document.getElementById("email");
   const tel = document.getElementById("tel");
@@ -369,20 +544,12 @@ function validateForm() {
     bell,
     zip,
   ];
-  inputsArr.forEach((input) => {
-    if (input.value.trim() === "") {
-      isValid = false;
-      input.style.border = "1px solid red";
-    } else {
-      input.style.border = "none";
-    }
-  });
-
-  if (!validateEmail(email.value)) isValid = false;
-  return isValid;
+  return inputsArr;
 }
-
-function validateEmail(email) {
+function validateEmail() {
+  const email = document.getElementById("email").value;
+  //check if there is any blank spaces
+  if (/\s/.test(email)) return false;
   // Check that there is exactly one '@' symbol
   const atSymbols = email.split("@");
   if (atSymbols.length !== 2) {
@@ -399,6 +566,7 @@ function validateEmail(email) {
   if (atSymbols[0].includes("..") || atSymbols[1].includes("..")) {
     return false;
   }
+
   // Check for dots at the beginning or end of the email
   if (
     atSymbols[0].startsWith(".") ||
@@ -408,7 +576,6 @@ function validateEmail(email) {
   ) {
     return false;
   }
-
   // If all conditions are met, the email is considered valid
   return true;
 }
