@@ -378,5 +378,37 @@ function validateForm() {
     }
   });
 
+  if (!validateEmail(email.value)) isValid = false;
   return isValid;
+}
+
+function validateEmail(email) {
+  // Check that there is exactly one '@' symbol
+  const atSymbols = email.split("@");
+  if (atSymbols.length !== 2) {
+    return false;
+  }
+
+  // Check that there is at least one '.' symbol after '@'
+  const dotsAfterAt = atSymbols[1].split(".");
+  if (dotsAfterAt.length < 2) {
+    return false;
+  }
+
+  // Check for consecutive dots in the local and domain parts
+  if (atSymbols[0].includes("..") || atSymbols[1].includes("..")) {
+    return false;
+  }
+  // Check for dots at the beginning or end of the email
+  if (
+    atSymbols[0].startsWith(".") ||
+    atSymbols[0].endsWith(".") ||
+    atSymbols[1].startsWith(".") ||
+    atSymbols[1].endsWith(".")
+  ) {
+    return false;
+  }
+
+  // If all conditions are met, the email is considered valid
+  return true;
 }
