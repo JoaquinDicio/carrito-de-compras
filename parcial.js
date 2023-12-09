@@ -333,7 +333,7 @@ function generateCheckoutForm() {
   );
   //card exp
   checkoutForm.appendChild(
-    createInput("MM/AA", "text", "d-inline-block", "card-expiration", true)
+    createInput("MMAA", "text", "d-inline-block", "card-expiration", true)
   );
   //delivery info
   const h5Delivery = document.createElement("h5");
@@ -442,6 +442,7 @@ function isCreditCard(cardType) {
     document.getElementById("select-credit").remove();
   }
 }
+//generates a generic modal ==> return two HTMLelements: modalContainer and modal
 function generateNewModal(title, id) {
   //new modal
   const modalContainer = document.createElement("div");
@@ -471,7 +472,7 @@ function validateForm() {
   getInputsFromCheckout().forEach((input) => {
     if (input.value.trim() === "") {
       isValid = false;
-      input.style.border = "1px solid red";
+      markUpError(input);
     } else {
       input.style.border = "none";
     }
@@ -479,9 +480,7 @@ function validateForm() {
   //validate email
   if (!validateEmail()) {
     isValid = false;
-    email.style.border = "1px solid red";
-    //in case element is not visible
-    email.scrollIntoView();
+    markUpError(document.getElementById("email"), "Formato de mail invalido");
   }
   if (
     !validateCardNumbers(
@@ -491,6 +490,10 @@ function validateForm() {
     )
   )
     isValid = false;
+  if (isNaN(document.getElementById("tel").value)) {
+    isValid = false;
+    markUpError(document.getElementById("tel"), "Telefono invalido");
+  }
   return isValid;
 }
 function validateCardNumbers(cardnumber, cvv, exp) {
@@ -500,13 +503,13 @@ function validateCardNumbers(cardnumber, cvv, exp) {
   cardData.forEach((input) => {
     if (isNaN(input.value)) {
       isValid = false;
-      markUpError(input);
+      markUpError(input, "Deben ser numeros");
     }
   });
   //cardnumber lenght
   if (cardnumber.value.length !== 16) {
     isValid = false;
-    markUpError(cardnumber);
+    markUpError(cardnumber, "Deben ser 16 digitos sin espacios");
   }
   //code lenght
   if (cvv.value.length !== 3) {
@@ -520,8 +523,21 @@ function validateCardNumbers(cardnumber, cvv, exp) {
   }
   return isValid;
 }
-function markUpError(element) {
+function markUpError(element, message) {
   element.style.border = "1px solid red";
+  if (message && !checkErrorExistence(element)) {
+    const err = document.createElement("p");
+    err.style.color = "red";
+    err.textContent = message;
+    err.style.fontSize = "12px";
+    err.style.width = "100%";
+    err.id = "p-" + element.id;
+    element.insertAdjacentElement("afterend", err);
+  }
+}
+function checkErrorExistence(element) {
+  if (document.getElementById("p-" + element.id)) return true;
+  return false;
 }
 function getInputsFromCheckout() {
   const name = document.getElementById("name");
