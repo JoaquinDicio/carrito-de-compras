@@ -222,7 +222,7 @@ function removeFromCart(id) {
   showCart();
   updateCartPreview();
 }
-//close active modal
+//closes any active modal
 function closeModal() {
   document.body.removeChild(document.querySelector(".modal-container"));
 }
@@ -244,6 +244,7 @@ function showProductsByCategory(cat) {
   } else {
     const result = productsList.filter((product) => product.categoria == cat);
     clearList();
+    generateBanner(cat);
     if (result) renderProducts(result);
   }
 }
@@ -252,6 +253,26 @@ function clearList() {
   const ul = document.getElementById("products");
   while (ul.firstChild) {
     ul.removeChild(ul.firstChild);
+  }
+}
+//generates specific banner for each category
+function generateBanner(cat) {
+  //remove previous banner if there is one
+  removeBanner();
+  //generate new banner
+  const bannerContainer = document.createElement("div");
+  bannerContainer.id = "banner";
+  const bannerTitle = document.createElement("h2");
+  bannerTitle.textContent = "Descubri las increibles ofertas en " + cat;
+  bannerContainer.appendChild(bannerTitle);
+  document
+    .getElementById("list-title")
+    .insertAdjacentElement("beforebegin", bannerContainer);
+  setTimeout(() => removeBanner(), 10000);
+}
+function removeBanner() {
+  if (document.getElementById("banner")) {
+    document.getElementById("banner").remove();
   }
 }
 //add to cart
@@ -392,7 +413,8 @@ function showThanksModal(e) {
     document.body.appendChild(modalContainer);
   }
 }
-//utilities
+
+//============================================UTILITIES
 function AddParagraph(appendTo, text, classname) {
   if (text) {
     const p = document.createElement("p");
@@ -466,6 +488,7 @@ function generateNewModal(title, id) {
 
   return { modalContainer, modal };
 }
+//trigger form validations
 function validateForm() {
   let isValid = true;
   //verifies if any input is empty
@@ -523,6 +546,7 @@ function validateCardNumbers(cardnumber, cvv, exp) {
   }
   return isValid;
 }
+//displays error msg
 function markUpError(element, message) {
   element.style.border = "1px solid red";
   if (message && !checkErrorExistence(element)) {
@@ -535,6 +559,7 @@ function markUpError(element, message) {
     element.insertAdjacentElement("afterend", err);
   }
 }
+//check if error msg is already displayed
 function checkErrorExistence(element) {
   if (document.getElementById("p-" + element.id)) return true;
   return false;

@@ -126,7 +126,21 @@ p.category {
   width: fit-content;
   text-align: center;
 }
-
+/*-------------------------------------------------- Banner */
+div#banner{
+  background-image: url('./assets/banner.png');
+  background-size: cover;
+  height: 400px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+}
+#banner h2{
+  font-weight: bolder;
+  font-size: 3rem;
+  color: white;
+  padding-left: 40px;
+}
 /*-------------------------------------------------- Cart Preview */
 div.cart-preview {
   position: fixed;
