@@ -240,6 +240,7 @@ function renderFilters() {
 function showProductsByCategory(cat) {
   if (cat === "todos") {
     clearList();
+    removeBanner();
     renderProducts(productsList);
   } else {
     const result = productsList.filter((product) => product.categoria == cat);
